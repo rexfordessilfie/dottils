@@ -1,0 +1,12 @@
+{
+  "name": "core",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "turbo build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^0.34.1"
+  }
+}
