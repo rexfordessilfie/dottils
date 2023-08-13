@@ -1,12 +1,14 @@
 {
   "name": "core",
   "version": "0.0.1",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "turbo build",
+    "build": "tsc -p tsconfig-build.json",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "typescript": "^5.1.6",
     "vitest": "^0.34.1"
   }
 }

@@ -15,9 +15,11 @@
     "noUnusedParameters": false,
     "preserveWatchOutput": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    "outDir": "dist"
   },
 
-  "include": ["."],
+  "files": ["src/index.ts"],
+  "include": ["test"],
   "exclude": ["dist", "build", "node_modules"]
 }
