@@ -1,4 +1,3 @@
-const ROOT_KEY = "$" as const;
 /**
  * Creates a key in a dot-notation object from the
  * given separator and a list of arguments.
@@ -41,9 +40,13 @@ export function split(
 }
 
 type MergeOpts = {
-  flattenArray?: boolean;
+  transformArray?: boolean;
   initialData?: Record<string, any>;
 };
+
+function isArrayIndex(str: string) {
+  return /\[\d+\]/.test(str.toString());
+}
 
 /**
  * Transforms a dot-notation object to an nested object
@@ -52,84 +55,82 @@ type MergeOpts = {
 export function merge(
   separator: string,
   data: Record<string, unknown>,
-  opts: MergeOpts = { flattenArray: true } // TODO: add initial data key
+  opts: MergeOpts = { transformArray: true } // TODO: add initial data key
 ) {
-  const result: { $: Record<string, any> } = { [ROOT_KEY]: {} };
-  const arrayObjects = new Map<string, Record<string, any>>();
+  const transform = { $: {} as Record<string, any> };
 
-  type ReduceResult = {
-    path: string;
-    result: Record<string, any>;
-    previous: Record<string, any>;
-  };
+  const keys = Object.keys(data);
 
-  Object.keys(data).forEach((dataKey) => {
-    const path = split(separator, dataKey, { cleanArrayIndexes: true });
+  const arrayLikeParents = new Map<string, Record<string, any>>();
 
-    path.reduce(
-      (acc, curr, idx) => {
-        const isEnd = idx === path.length - 1;
+  for (let key of keys) {
+    const pieces = split(separator, key, { cleanArrayIndexes: true });
 
-        // Replace box brackets and or quotes
-        const key = curr?.toString().replace(/^\[("|'|`)?|("|'|`)?\]$/g, "");
+    let current = transform.$;
 
-        // Keep track of parent objects with keys we would have to flatten
-        if (opts.flattenArray && /\[\d+\]/.test(curr.toString())) {
-          arrayObjects.set(acc.path, acc.previous);
-        }
+    const memo = {
+      path: "$",
+      parent: transform.$,
+    };
 
-        // Set value if end, or continue down the chain with the object at current key or a new one
-        acc.result[key] = isEnd ? data[dataKey] : acc.result[key] || {};
+    for (let index = 0; index < pieces.length; index++) {
+      const isLast = index === pieces.length - 1;
+      let _piece = pieces[index];
 
-        // Keep track of the path for book-keeping (eg. when we come back arround to track arrays to flatten)
-        acc.path = acc.path ? dot(separator, acc.path, key) : key;
+      const piece = _piece?.toString().replace(/^\[("|'|`)?|("|'|`)?\]$/g, "");
 
-        return {
-          previous: acc.result,
-          result: acc.result[key],
-          path: acc.path,
-        };
-      },
-      {
-        path: ROOT_KEY,
-        previous: result[ROOT_KEY],
-        result: result[ROOT_KEY],
-      } as ReduceResult
-    );
-  });
+      if (
+        opts.transformArray &&
+        typeof _piece === "string" &&
+        isArrayIndex(_piece)
+      ) {
+        arrayLikeParents.set(memo.path, memo.parent);
+      }
 
-  // Merge the array values:
-  if (opts.flattenArray) {
-    Array.from(arrayObjects.entries())
-      .reverse() // Reverse so we process nested objects first
-      .forEach(([dotKey, parent]) => {
-        const path = split(separator, dotKey);
-        const endKey = path.at(-1) ?? "ERROR";
+      if (isLast) {
+        current[piece] = data[key];
+      } else {
+        current[piece] = current[piece] || {};
+      }
 
-        const isRoot = endKey === ROOT_KEY && path.length === 1;
-
-        // Get the object with the array object indexes
-        const child = isRoot ? result[ROOT_KEY] : parent[endKey];
-
-        // Create the array
-        const maxIndex = Math.max(...(Object.keys(child) as any)); // Math.max still works on string numbers
-        const array = new Array(maxIndex + 1).fill(undefined);
-
-        // Set the indexes to correct values in the array
-        Object.entries(child).forEach(([key, value]) => {
-          // TODO: throw if key is not actually a number
-          array[Number(key)] = value;
-        });
-
-        if (isRoot) {
-          result[ROOT_KEY] = array;
-        } else {
-          parent[endKey] = array;
-        }
-      });
+      memo.parent = current;
+      current = current[piece];
+      memo.path = memo.path ? dot(separator, memo.path, piece) : piece;
+    }
   }
 
-  return result[ROOT_KEY];
+  // Merge the array values:
+  if (opts.transformArray) {
+    const toTransform = Array.from(arrayLikeParents.entries()).reverse(); // Reverse so we process nested objects first
+
+    for (let [key, arrayLikeParent] of toTransform) {
+      const pieces = split(separator, key);
+      const arrayLikeKey = pieces.at(-1) ?? "ERROR";
+
+      const isRoot = arrayLikeKey === "$" && pieces.length === 1;
+
+      // Get the object with the array object indexes
+      const arrayLike = isRoot ? transform.$ : arrayLikeParent[arrayLikeKey];
+
+      // Create the array
+      const maxIndex = Math.max(...(Object.keys(arrayLike) as any)); // Math.max still works on string numbers
+      const array = new Array(maxIndex + 1).fill(undefined);
+
+      // Set the indexes to correct values in the array
+      Object.entries(arrayLike).forEach(([key, value]) => {
+        // TODO: throw if key is not actually a number
+        array[Number(key)] = value;
+      });
+
+      if (isRoot) {
+        transform.$ = array;
+      } else {
+        arrayLikeParent[arrayLikeKey] = array;
+      }
+    }
+  }
+
+  return transform.$;
 }
 
 /**
