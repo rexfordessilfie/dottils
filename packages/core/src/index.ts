@@ -10,7 +10,7 @@ export function dot(
 ): string {
   if (typeof b === "number") {
     return a
-      ? `${a}[${b}]` // e.g "person[0]"
+      ? `${a}[${b}]` // e.g "a[0]"
       : `${separator}[${b}]`; // e.g ".[0]"
   }
   return `${a}${separator}${b}`;
@@ -42,6 +42,7 @@ export function split(
 
 type MergeOpts = {
   flattenArray?: boolean;
+  initialData?: Record<string, any>;
 };
 
 /**
@@ -51,7 +52,7 @@ type MergeOpts = {
 export function merge(
   separator: string,
   data: Record<string, unknown>,
-  opts: MergeOpts = { flattenArray: true }
+  opts: MergeOpts = { flattenArray: true } // TODO: add initial data key
 ) {
   const result: { $: Record<string, any> } = { [ROOT_KEY]: {} };
   const arrayObjects = new Map<string, Record<string, any>>();
@@ -116,6 +117,7 @@ export function merge(
 
         // Set the indexes to correct values in the array
         Object.entries(child).forEach(([key, value]) => {
+          // TODO: throw if key is not actually a number
           array[Number(key)] = value;
         });
 

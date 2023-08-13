@@ -29,6 +29,12 @@ const sample4 = {
   "[1].name": "google",
 };
 
+const sample5 = {
+  "[0][0]": 0,
+  "[1][1]": 1,
+  "[2][2]": 2,
+};
+
 test("correctly merges an object with array index and flattens it", () => {
   expect(d.merge(sample1)).toEqual({
     workspace: {
@@ -95,7 +101,7 @@ test("correctly merges an object with preceding separator then array", () => {
     },
   });
 
-  expect(d.merge(sample3, { flattenArray: true })).toEqual({
+  expect(d.merge(sample3)).toEqual({
     "": [
       {
         name: "apple",
@@ -119,12 +125,20 @@ test("correctly merges array only object", () => {
 });
 
 test("correctly merges and flattens array only object", () => {
-  expect(d.merge(sample4, { flattenArray: true })).toEqual([
+  expect(d.merge(sample4)).toEqual([
     {
       name: "apple",
     },
     {
       name: "google",
     },
+  ]);
+});
+
+test("correctly merges nested array only objects", () => {
+  expect(d.merge(sample5)).toEqual([
+    [0],
+    [undefined, 1],
+    [undefined, undefined, 2],
   ]);
 });
