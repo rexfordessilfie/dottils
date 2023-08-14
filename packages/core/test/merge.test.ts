@@ -55,7 +55,7 @@ test("correctly merges an object with array index and flattens it", () => {
 });
 
 test("correctly merges an object without flattening arrays", () => {
-  expect(d.merge(sample1, { flattenArray: false })).toEqual({
+  expect(d.merge(sample1, { shouldTransformArray: false })).toEqual({
     workspace: {
       apple: {
         teams: {
@@ -75,7 +75,7 @@ test("correctly merges an object without flattening arrays", () => {
 });
 
 test("correctly merges an object with preceding separator", () => {
-  expect(d.merge(sample2, { flattenArray: false })).toEqual({
+  expect(d.merge(sample2, { shouldTransformArray: false })).toEqual({
     "": {
       workspace: {
         0: {
@@ -90,7 +90,7 @@ test("correctly merges an object with preceding separator", () => {
 });
 
 test("correctly merges an object with preceding separator then array", () => {
-  expect(d.merge(sample3, { flattenArray: false })).toEqual({
+  expect(d.merge(sample3, { shouldTransformArray: false })).toEqual({
     "": {
       0: {
         name: "apple",
@@ -114,7 +114,7 @@ test("correctly merges an object with preceding separator then array", () => {
 });
 
 test("correctly merges array only object", () => {
-  expect(d.merge(sample4, { flattenArray: false })).toEqual({
+  expect(d.merge(sample4, { shouldTransformArray: false })).toEqual({
     0: {
       name: "apple",
     },

@@ -1,29 +1,30 @@
+type DotOpts = {
+  separator?: string;
+};
 /**
  * Creates a key in a dot-notation object from the
  * given separator and a list of arguments.
  */
 export function dot(
-  separator: string,
   a: string | number = "",
-  b: string | number = ""
+  b: string | number = "",
+  opts: DotOpts = {}
 ): string {
   if (typeof b === "number") {
     return a
       ? `${a}[${b}]` // e.g "a[0]"
-      : `${separator}[${b}]`; // e.g ".[0]"
+      : `${opts.separator}[${b}]`; // e.g ".[0]"
   }
-  return `${a}${separator}${b}`;
+  return `${a}${opts.separator}${b}`;
 }
 
 type SplitOpts = {
   cleanArrayIndexes?: boolean;
+  separator?: string;
 };
 
-export function split(
-  separator: string,
-  key: string,
-  opts: SplitOpts = { cleanArrayIndexes: false }
-): (string | number)[] {
+export function split(key: string, opts: SplitOpts = {}): (string | number)[] {
+  const { cleanArrayIndexes = false, separator = "." } = opts;
   const nonSeparatorOrBoxes = `[^\\${separator}\\[\\]]`;
   const pattern = new RegExp(
     `^$|^(?=\\${separator})|\\[${nonSeparatorOrBoxes}+\\]|${nonSeparatorOrBoxes}+|(?<=\\${separator})$`,
@@ -32,7 +33,7 @@ export function split(
 
   const result = Array.from(key.match(pattern) || []);
 
-  if (opts.cleanArrayIndexes) {
+  if (cleanArrayIndexes) {
     // TODO
   }
 
@@ -40,8 +41,9 @@ export function split(
 }
 
 type MergeOpts = {
-  transformArray?: boolean;
+  shouldTransformArray?: boolean;
   initialData?: Record<string, any>;
+  separator?: string;
 };
 
 function isArrayIndex(str: string) {
@@ -53,10 +55,10 @@ function isArrayIndex(str: string) {
  * with the given dot character.
  */
 export function merge(
-  separator: string,
   data: Record<string, unknown>,
-  opts: MergeOpts = { transformArray: true } // TODO: add initial data key
+  opts: MergeOpts = {} // TODO: add initial data key
 ) {
+  const { shouldTransformArray = true, separator } = opts;
   const transform = { $: {} as Record<string, any> };
 
   const keys = Object.keys(data);
@@ -64,7 +66,10 @@ export function merge(
   const arrayLikeParents = new Map<string, Record<string, any>>();
 
   for (let key of keys) {
-    const pieces = split(separator, key, { cleanArrayIndexes: true });
+    const pieces = split(key, {
+      cleanArrayIndexes: true,
+      separator: separator,
+    });
 
     let current = transform.$;
 
@@ -80,7 +85,7 @@ export function merge(
       const piece = _piece?.toString().replace(/^\[("|'|`)?|("|'|`)?\]$/g, "");
 
       if (
-        opts.transformArray &&
+        shouldTransformArray &&
         typeof _piece === "string" &&
         isArrayIndex(_piece)
       ) {
@@ -95,38 +100,43 @@ export function merge(
 
       memo.parent = current;
       current = current[piece];
-      memo.path = memo.path ? dot(separator, memo.path, piece) : piece;
+      memo.path = memo.path
+        ? dot(memo.path, piece, { separator: separator })
+        : piece;
     }
   }
 
+  if (!shouldTransformArray) {
+    return transform.$;
+  }
+
   // Merge the array values:
-  if (opts.transformArray) {
-    const toTransform = Array.from(arrayLikeParents.entries()).reverse(); // Reverse so we process nested objects first
+  const toTransform = Array.from(arrayLikeParents.entries()).reverse(); // Reverse so we process nested objects first
 
-    for (let [key, arrayLikeParent] of toTransform) {
-      const pieces = split(separator, key);
-      const arrayLikeKey = pieces.at(-1) ?? "ERROR";
+  for (let [key, arrayLikeParent] of toTransform) {
+    const pieces = split(key, { separator: separator });
 
-      const isRoot = arrayLikeKey === "$" && pieces.length === 1;
+    const arrayLikeKey = pieces.at(-1) ?? "ERROR";
 
-      // Get the object with the array object indexes
-      const arrayLike = isRoot ? transform.$ : arrayLikeParent[arrayLikeKey];
+    const isRoot = arrayLikeKey === "$" && pieces.length === 1;
 
-      // Create the array
-      const maxIndex = Math.max(...(Object.keys(arrayLike) as any)); // Math.max still works on string numbers
-      const array = new Array(maxIndex + 1).fill(undefined);
+    // Get the object with the array object indexes
+    const arrayLike = isRoot ? transform.$ : arrayLikeParent[arrayLikeKey];
 
-      // Set the indexes to correct values in the array
-      Object.entries(arrayLike).forEach(([key, value]) => {
-        // TODO: throw if key is not actually a number
-        array[Number(key)] = value;
-      });
+    // Create the array
+    const maxIndex = Math.max(...(Object.keys(arrayLike) as any)); // Math.max still works on string numbers
+    const array = new Array(maxIndex + 1).fill(undefined);
 
-      if (isRoot) {
-        transform.$ = array;
-      } else {
-        arrayLikeParent[arrayLikeKey] = array;
-      }
+    // Set the indexes to correct values in the array
+    Object.entries(arrayLike).forEach(([key, value]) => {
+      // TODO: throw if key is not actually a number
+      array[Number(key)] = value;
+    });
+
+    if (isRoot) {
+      transform.$ = array;
+    } else {
+      arrayLikeParent[arrayLikeKey] = array;
     }
   }
 
@@ -138,9 +148,11 @@ export function merge(
  */
 export function dotter(separator = ".") {
   return {
-    dot: (a: string | number, b: string | number) => dot(separator, a, b),
+    dot: (a: string | number, b: string | number, opts?: DotOpts) =>
+      dot(a, b, { ...opts, separator }),
     merge: (data: Record<string, any>, opts?: MergeOpts) =>
-      merge(separator, data, opts),
-    split: (key: string, opts?: SplitOpts) => split(separator, key, opts),
+      merge(data, { ...opts, separator }),
+    split: (key: string, opts?: SplitOpts) =>
+      split(key, { ...opts, separator }),
   };
 }
