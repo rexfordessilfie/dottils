@@ -54,7 +54,7 @@ function isArrayIndex(str: string) {
  * Transforms a dot-notation object to an nested object
  * with the given dot character.
  */
-export function merge(
+export function transform(
   object: Record<string, unknown>,
   opts: MergeOpts = {} // TODO: add initial data key
 ) {
@@ -152,8 +152,8 @@ export function createDotter(config?: {
   return {
     dot: (a: string | number, b: string | number, opts: DotOpts = {}) =>
       dot(a, b, { ...config?.dot, ...opts }),
-    merge: (data: Record<string, any>, opts: MergeOpts = {}) =>
-      merge(data, { ...config?.merge, ...opts }),
+    transform: (data: Record<string, any>, opts: MergeOpts = {}) =>
+      transform(data, { ...config?.merge, ...opts }),
     split: (key: string, opts: SplitOpts = {}) =>
       split(key, { ...config?.split, ...opts }),
   };

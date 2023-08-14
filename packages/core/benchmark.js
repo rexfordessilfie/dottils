@@ -1,6 +1,6 @@
 import dottie from "dottie";
 import { trace } from "ts-wrappers";
-import { merge } from "./src";
+import { transform } from "./src";
 
 const basic = {
   "workspace.apple.teams.0.0.name": "Rex",
@@ -27,9 +27,11 @@ const withArrays = {
 };
 
 const dottieTransform = trace(dottie.transform);
-const dotterMerge = trace(merge);
+const dotterTransform = trace(transform);
 
 console.log(dottieTransform(basic));
-console.log(dotterMerge(basic));
-console.log(dotterMerge(withBoxes, { boxSplit: true }));
-console.log(dotterMerge(withArrays, { boxSplit: true, arrayTransform: true }));
+console.log(dotterTransform(basic));
+console.log(dotterTransform(withBoxes, { boxSplit: true }));
+console.log(
+  dotterTransform(withArrays, { boxSplit: true, arrayTransform: true })
+);
