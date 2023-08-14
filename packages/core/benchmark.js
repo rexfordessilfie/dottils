@@ -30,5 +30,6 @@ const dottieTransform = trace(dottie.transform);
 const dotterMerge = trace(merge);
 
 console.log(dottieTransform(basic));
+console.log(dotterMerge(basic));
 console.log(dotterMerge(withBoxes, { boxSplit: true }));
 console.log(dotterMerge(withArrays, { boxSplit: true, arrayTransform: true }));

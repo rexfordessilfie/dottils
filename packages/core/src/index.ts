@@ -1,3 +1,4 @@
+import { raise } from "./utils";
 type DotOpts = {
   separator?: string;
 };
@@ -105,53 +106,55 @@ export function merge(
     }
   }
 
-  if (!arrayTransform) {
-    return transformed.$;
-  }
+  if (arrayTransform) {
+    // Merge the array values:
+    const toTransform = Array.from(arrayLikeParents.entries()).reverse(); // Reverse so we process nested objects first
 
-  // Merge the array values:
-  const toTransform = Array.from(arrayLikeParents.entries()).reverse(); // Reverse so we process nested objects first
+    for (let [key, arrayLikeParent] of toTransform) {
+      const pieces = split(key, { separator: separator });
 
-  for (let [key, arrayLikeParent] of toTransform) {
-    const pieces = split(key, { separator: separator });
+      const arrayLikeKey = pieces.at(-1) ?? raise("missing array-like key");
 
-    const arrayLikeKey = pieces.at(-1) ?? "ERROR";
+      const isRoot = arrayLikeKey === "$" && pieces.length === 1;
 
-    const isRoot = arrayLikeKey === "$" && pieces.length === 1;
+      // Get the object with the array object indexes
+      const arrayLike = isRoot ? transformed.$ : arrayLikeParent[arrayLikeKey];
 
-    // Get the object with the array object indexes
-    const arrayLike = isRoot ? transformed.$ : arrayLikeParent[arrayLikeKey];
+      // Create the array
+      const maxIndex = Math.max(...(Object.keys(arrayLike) as any)); // Math.max still works on string numbers
+      const array = new Array(maxIndex + 1).fill(undefined);
 
-    // Create the array
-    const maxIndex = Math.max(...(Object.keys(arrayLike) as any)); // Math.max still works on string numbers
-    const array = new Array(maxIndex + 1).fill(undefined);
+      // Set the indexes to correct values in the array
+      Object.entries(arrayLike).forEach(([key, value]) => {
+        const index = Number(key);
+        if (isNaN(index)) {
+          raise(`invalid array index: ${key}`);
+        }
+        array[index] = value;
+      });
 
-    // Set the indexes to correct values in the array
-    Object.entries(arrayLike).forEach(([key, value]) => {
-      // TODO: throw if key is not actually a number
-      array[Number(key)] = value;
-    });
-
-    if (isRoot) {
-      transformed.$ = array;
-    } else {
-      arrayLikeParent[arrayLikeKey] = array;
+      if (isRoot) {
+        transformed.$ = array;
+      } else {
+        arrayLikeParent[arrayLikeKey] = array;
+      }
     }
   }
 
   return transformed.$;
 }
 
-/**
- * Makes a dot function and a merge function given the dot character.
- */
-export function dotter(separator = ".") {
+export function createDotter(config?: {
+  split: SplitOpts;
+  dot: DotOpts;
+  merge: MergeOpts;
+}) {
   return {
-    dot: (a: string | number, b: string | number, opts?: DotOpts) =>
-      dot(a, b, { ...opts, separator }),
-    merge: (data: Record<string, any>, opts?: MergeOpts) =>
-      merge(data, { ...opts, separator }),
-    split: (key: string, opts?: SplitOpts) =>
-      split(key, { ...opts, separator }),
+    dot: (a: string | number, b: string | number, opts: DotOpts = {}) =>
+      dot(a, b, { ...config?.dot, ...opts }),
+    merge: (data: Record<string, any>, opts: MergeOpts = {}) =>
+      merge(data, { ...config?.merge, ...opts }),
+    split: (key: string, opts: SplitOpts = {}) =>
+      split(key, { ...config?.split, ...opts }),
   };
 }
