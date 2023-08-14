@@ -40,7 +40,7 @@ export function split(key: string, opts: SplitOpts = {}): string[] {
   return key.split(separator);
 }
 
-type MergeOpts = {
+type TransformOpts = {
   boxSplit?: boolean;
   arrayTransform?: boolean;
   separator?: string;
@@ -56,7 +56,7 @@ function isArrayIndex(str: string) {
  */
 export function transform(
   object: Record<string, unknown>,
-  opts: MergeOpts = {} // TODO: add initial data key
+  opts: TransformOpts = {} // TODO: add initial data key
 ) {
   const { arrayTransform = false, separator = ".", boxSplit = false } = opts;
 
@@ -66,32 +66,26 @@ export function transform(
     arrayLikeParents = new Map<string, Record<string, any>>();
 
   for (let i = 0; i < length; i++) {
-    let key = keys[i];
-    let pieces = split(key, {
-      separator: separator,
-      boxSplit,
-    });
+    const key = keys[i],
+      pieces = split(key, {
+        separator: separator,
+        boxSplit,
+      }),
+      piecesLength = pieces.length;
 
-    let piecesLength = pieces.length;
+    let index,
+      current = transformed.$,
+      memoPath = "$",
+      memoParent = transformed.$;
 
-    let current = transformed.$;
+    for (index = 0; index < piecesLength; index++) {
+      const isLast = index === piecesLength - 1,
+        rawPiece = pieces[index],
+        piece = boxSplit
+          ? rawPiece.replace(/^\[("|'|`)?|("|'|`)?\]$/g, "")
+          : rawPiece;
 
-    let memoPath = "$";
-    let memoParent = transformed.$;
-
-    for (let index = 0; index < piecesLength; index++) {
-      const isLast = index === piecesLength - 1;
-      let rawPiece = pieces[index];
-
-      let piece = boxSplit
-        ? rawPiece.replace(/^\[("|'|`)?|("|'|`)?\]$/g, "")
-        : rawPiece;
-
-      if (isLast) {
-        current[piece] = object[key];
-      } else {
-        current[piece] = current[piece] || {};
-      }
+      current[piece] = isLast ? object[key] : current[piece] || {};
 
       if (arrayTransform) {
         isArrayIndex(rawPiece) && arrayLikeParents.set(memoPath, memoParent);
@@ -147,12 +141,12 @@ export function transform(
 export function createDotter(config?: {
   split: SplitOpts;
   dot: DotOpts;
-  merge: MergeOpts;
+  merge: TransformOpts;
 }) {
   return {
     dot: (a: string | number, b: string | number, opts: DotOpts = {}) =>
       dot(a, b, { ...config?.dot, ...opts }),
-    transform: (data: Record<string, any>, opts: MergeOpts = {}) =>
+    transform: (data: Record<string, any>, opts: TransformOpts = {}) =>
       transform(data, { ...config?.merge, ...opts }),
     split: (key: string, opts: SplitOpts = {}) =>
       split(key, { ...config?.split, ...opts }),
