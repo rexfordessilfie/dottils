@@ -35,8 +35,16 @@ const sample5 = {
   "[2][2]": 2,
 };
 
+const sample6 = {
+  'workspace["apple"].teams.0.0.name': "Rex",
+  "workspace['apple'].teams.0.1.name": "Dan",
+  "workspace[`apple`].teams.0.2.name": "Bella",
+  "workspace.apple.teams.0.4.name": "Harvey",
+  "workspace.apple.teams.1.3.name": "Jane",
+};
+
 test("correctly merges an object with array index and flattens it", () => {
-  expect(d.merge(sample1)).toEqual({
+  expect(d.merge(sample1, { arrayTransform: true, boxSplit: true })).toEqual({
     workspace: {
       apple: {
         teams: [
@@ -54,8 +62,28 @@ test("correctly merges an object with array index and flattens it", () => {
   });
 });
 
+test("correctly merges an object with boxes", () => {
+  expect(d.merge(sample6, { boxSplit: true })).toEqual({
+    workspace: {
+      apple: {
+        teams: {
+          0: {
+            0: { name: "Rex" },
+            1: { name: "Dan" },
+            2: { name: "Bella" },
+            4: { name: "Harvey" },
+          },
+          1: {
+            3: { name: "Jane" },
+          },
+        },
+      },
+    },
+  });
+});
+
 test("correctly merges an object without flattening arrays", () => {
-  expect(d.merge(sample1, { shouldTransformArray: false })).toEqual({
+  expect(d.merge(sample1, { arrayTransform: false, boxSplit: true })).toEqual({
     workspace: {
       apple: {
         teams: {
@@ -75,7 +103,7 @@ test("correctly merges an object without flattening arrays", () => {
 });
 
 test("correctly merges an object with preceding separator", () => {
-  expect(d.merge(sample2, { shouldTransformArray: false })).toEqual({
+  expect(d.merge(sample2, { arrayTransform: false, boxSplit: true })).toEqual({
     "": {
       workspace: {
         0: {
@@ -90,7 +118,7 @@ test("correctly merges an object with preceding separator", () => {
 });
 
 test("correctly merges an object with preceding separator then array", () => {
-  expect(d.merge(sample3, { shouldTransformArray: false })).toEqual({
+  expect(d.merge(sample3, { arrayTransform: false, boxSplit: true })).toEqual({
     "": {
       0: {
         name: "apple",
@@ -101,7 +129,7 @@ test("correctly merges an object with preceding separator then array", () => {
     },
   });
 
-  expect(d.merge(sample3)).toEqual({
+  expect(d.merge(sample3, { arrayTransform: true, boxSplit: true })).toEqual({
     "": [
       {
         name: "apple",
@@ -114,7 +142,7 @@ test("correctly merges an object with preceding separator then array", () => {
 });
 
 test("correctly merges array only object", () => {
-  expect(d.merge(sample4, { shouldTransformArray: false })).toEqual({
+  expect(d.merge(sample4, { arrayTransform: false, boxSplit: true })).toEqual({
     0: {
       name: "apple",
     },
@@ -125,7 +153,7 @@ test("correctly merges array only object", () => {
 });
 
 test("correctly merges and flattens array only object", () => {
-  expect(d.merge(sample4)).toEqual([
+  expect(d.merge(sample4, { boxSplit: true, arrayTransform: true })).toEqual([
     {
       name: "apple",
     },
@@ -136,7 +164,7 @@ test("correctly merges and flattens array only object", () => {
 });
 
 test("correctly merges nested array only objects", () => {
-  expect(d.merge(sample5)).toEqual([
+  expect(d.merge(sample5, { boxSplit: true, arrayTransform: true })).toEqual([
     [0],
     [undefined, 1],
     [undefined, undefined, 2],

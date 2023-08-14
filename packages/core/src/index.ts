@@ -10,39 +10,38 @@ export function dot(
   b: string | number = "",
   opts: DotOpts = {}
 ): string {
+  const { separator = "." } = opts;
   if (typeof b === "number") {
     return a
       ? `${a}[${b}]` // e.g "a[0]"
-      : `${opts.separator}[${b}]`; // e.g ".[0]"
+      : `${separator}[${b}]`; // e.g ".[0]"
   }
-  return `${a}${opts.separator}${b}`;
+  return `${a}${separator}${b}`;
 }
 
 type SplitOpts = {
-  cleanArrayIndexes?: boolean;
   separator?: string;
+  boxSplit?: boolean;
 };
 
-export function split(key: string, opts: SplitOpts = {}): (string | number)[] {
-  const { cleanArrayIndexes = false, separator = "." } = opts;
-  const nonSeparatorOrBoxes = `[^\\${separator}\\[\\]]`;
-  const pattern = new RegExp(
-    `^$|^(?=\\${separator})|\\[${nonSeparatorOrBoxes}+\\]|${nonSeparatorOrBoxes}+|(?<=\\${separator})$`,
-    "g"
-  );
+export function split(key: string, opts: SplitOpts = {}): string[] {
+  const { separator = ".", boxSplit: splitBoxes = false } = opts;
+  if (splitBoxes) {
+    const nonSeparatorOrBoxes = `[^\\${separator}\\[\\]]`;
+    const pattern = new RegExp(
+      `^$|^(?=\\${separator})|\\[${nonSeparatorOrBoxes}+\\]|${nonSeparatorOrBoxes}+|(?<=\\${separator})$`,
+      "g"
+    );
 
-  const result = Array.from(key.match(pattern) || []);
-
-  if (cleanArrayIndexes) {
-    // TODO
+    return [...(key.match(pattern) || [])];
   }
 
-  return result;
+  return key.split(separator);
 }
 
 type MergeOpts = {
-  shouldTransformArray?: boolean;
-  initialData?: Record<string, any>;
+  boxSplit?: boolean;
+  arrayTransform?: boolean;
   separator?: string;
 };
 
@@ -55,59 +54,59 @@ function isArrayIndex(str: string) {
  * with the given dot character.
  */
 export function merge(
-  data: Record<string, unknown>,
+  object: Record<string, unknown>,
   opts: MergeOpts = {} // TODO: add initial data key
 ) {
-  const { shouldTransformArray = true, separator } = opts;
-  const transform = { $: {} as Record<string, any> };
+  const { arrayTransform = false, separator = ".", boxSplit = false } = opts;
 
-  const keys = Object.keys(data);
+  const transformed = { $: {} as Record<string, any> },
+    keys = Object.keys(object),
+    length = keys.length,
+    arrayLikeParents = new Map<string, Record<string, any>>();
 
-  const arrayLikeParents = new Map<string, Record<string, any>>();
-
-  for (let key of keys) {
-    const pieces = split(key, {
-      cleanArrayIndexes: true,
+  for (let i = 0; i < length; i++) {
+    let key = keys[i];
+    let pieces = split(key, {
       separator: separator,
+      boxSplit,
     });
 
-    let current = transform.$;
+    let piecesLength = pieces.length;
 
-    const memo = {
-      path: "$",
-      parent: transform.$,
-    };
+    let current = transformed.$;
 
-    for (let index = 0; index < pieces.length; index++) {
-      const isLast = index === pieces.length - 1;
-      let _piece = pieces[index];
+    let memoPath = "$";
+    let memoParent = transformed.$;
 
-      const piece = _piece?.toString().replace(/^\[("|'|`)?|("|'|`)?\]$/g, "");
+    for (let index = 0; index < piecesLength; index++) {
+      const isLast = index === piecesLength - 1;
+      let rawPiece = pieces[index];
 
-      if (
-        shouldTransformArray &&
-        typeof _piece === "string" &&
-        isArrayIndex(_piece)
-      ) {
-        arrayLikeParents.set(memo.path, memo.parent);
-      }
+      let piece = boxSplit
+        ? rawPiece.replace(/^\[("|'|`)?|("|'|`)?\]$/g, "")
+        : rawPiece;
 
       if (isLast) {
-        current[piece] = data[key];
+        current[piece] = object[key];
       } else {
         current[piece] = current[piece] || {};
       }
 
-      memo.parent = current;
+      if (arrayTransform) {
+        isArrayIndex(rawPiece) && arrayLikeParents.set(memoPath, memoParent);
+        memoParent = current;
+      }
+
       current = current[piece];
-      memo.path = memo.path
-        ? dot(memo.path, piece, { separator: separator })
-        : piece;
+
+      if (arrayTransform) {
+        memoPath = dot(memoPath, piece, { separator });
+      }
     }
   }
 
-  if (!shouldTransformArray) {
-    return transform.$;
+  if (!arrayTransform) {
+    return transformed.$;
   }
 
   // Merge the array values:
@@ -121,7 +120,7 @@ export function merge(
     const isRoot = arrayLikeKey === "$" && pieces.length === 1;
 
     // Get the object with the array object indexes
-    const arrayLike = isRoot ? transform.$ : arrayLikeParent[arrayLikeKey];
+    const arrayLike = isRoot ? transformed.$ : arrayLikeParent[arrayLikeKey];
 
     // Create the array
     const maxIndex = Math.max(...(Object.keys(arrayLike) as any)); // Math.max still works on string numbers
@@ -134,13 +133,13 @@ export function merge(
     });
 
     if (isRoot) {
-      transform.$ = array;
+      transformed.$ = array;
     } else {
       arrayLikeParent[arrayLikeKey] = array;
     }
   }
 
-  return transform.$;
+  return transformed.$;
 }
 
 /**

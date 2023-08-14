@@ -19,7 +19,7 @@ test("correctly dots with right empty", () => {
 });
 
 test("correctly splits with number", () => {
-  expect(d.split("person[0]")).toEqual(["person", "[0]"]);
+  expect(d.split("person[0]", { boxSplit: true })).toEqual(["person", "[0]"]);
 });
 
 test("correctly splits with empty left and number", () => {
