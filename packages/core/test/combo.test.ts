@@ -9,7 +9,14 @@ test("createDotter works", () => {
   expect(
     d.transform({
       "a.b.c": 0,
-      "x.y.z": 1,
+      "x['y']['z']": 1,
+    })
+  ).toEqual({ a: { b: { c: 0 } }, x: { y: { z: 1 } } });
+
+  expect(
+    d.transform({
+      "a['b']['c']": 0,
+      "x['y']['z']": 1,
     })
   ).toEqual({ a: { b: { c: 0 } }, x: { y: { z: 1 } } });
 
