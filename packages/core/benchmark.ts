@@ -10,7 +10,7 @@ const basic = {
   "workspace.apple.teams.1.3.name": "Jane",
 };
 
-const withBoxes = {
+const withBrackets = {
   'workspace["apple"].teams.0.0.name': "Rex",
   "workspace['apple'].teams.0.1.name": "Dan",
   "workspace[`apple`].teams.0.2.name": "Bella",
@@ -18,7 +18,7 @@ const withBoxes = {
   "workspace.apple.teams.1.3.name": "Jane",
 };
 
-const withArrays = {
+const withBracketsAndArrays = {
   'workspace["apple"].teams[0][0].name': "Rex",
   "workspace['apple'].teams[0][1].name": "Dan",
   "workspace[`apple`].teams[0][2].name": "Bella",
@@ -29,9 +29,16 @@ const withArrays = {
 const dottieTransform = trace(dottie.transform);
 const dotterTransform = trace(transform);
 
+console.log("\n---BASIC---");
 console.log(dottieTransform(basic));
 console.log(dotterTransform(basic));
-console.log(dotterTransform(withBoxes, { boxSplit: true }));
+
+console.log("\n---BRACKETS---");
+console.log(dotterTransform(withBrackets, { arrays: true }));
+
+console.log("\n---BRACKETS + ARRAYS---");
 console.log(
-  dotterTransform(withArrays, { boxSplit: true, arrayTransform: true })
+  dotterTransform(withBracketsAndArrays, { brackets: true, arrays: true })
 );
+
+console.log("");
