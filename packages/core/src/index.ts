@@ -22,15 +22,15 @@ export function dot(
 
 type SplitOpts = {
   separator?: string;
-  boxSplit?: boolean;
+  brackets?: boolean;
 };
 
 export function split(key: string, opts: SplitOpts = {}): string[] {
-  const { separator = ".", boxSplit: splitBoxes = false } = opts;
-  if (splitBoxes) {
-    const nonSeparatorOrBoxes = `[^\\${separator}\\[\\]]`;
+  const { separator = ".", brackets = false } = opts;
+  if (brackets) {
+    const NON_SEPARATOR_OR_BRACKETS = `[^\\${separator}\\[\\]]`;
     const pattern = new RegExp(
-      `^$|^(?=\\${separator})|\\[${nonSeparatorOrBoxes}+\\]|${nonSeparatorOrBoxes}+|(?<=\\${separator})$`,
+      `^$|^(?=\\${separator})|\\[${NON_SEPARATOR_OR_BRACKETS}+\\]|${NON_SEPARATOR_OR_BRACKETS}+|(?<=\\${separator})$`,
       "g"
     );
 
@@ -41,8 +41,8 @@ export function split(key: string, opts: SplitOpts = {}): string[] {
 }
 
 type TransformOpts = {
-  boxSplit?: boolean;
-  arrayTransform?: boolean;
+  brackets?: boolean;
+  arrays?: boolean;
   separator?: string;
 };
 
@@ -58,7 +58,7 @@ export function transform(
   object: Record<string, unknown>,
   opts: TransformOpts = {} // TODO: add initial data key
 ) {
-  const { arrayTransform = false, separator = ".", boxSplit = false } = opts;
+  const { arrays = false, separator = ".", brackets = false } = opts;
 
   const transformed = { $: {} as Record<string, any> },
     keys = Object.keys(object),
@@ -69,7 +69,7 @@ export function transform(
     const key = keys[i],
       pieces = split(key, {
         separator: separator,
-        boxSplit,
+        brackets: brackets,
       }),
       piecesLength = pieces.length;
 
@@ -81,26 +81,26 @@ export function transform(
     for (index = 0; index < piecesLength; index++) {
       const isLast = index === piecesLength - 1,
         rawPiece = pieces[index],
-        piece = boxSplit
+        piece = brackets
           ? rawPiece.replace(/^\[("|'|`)?|("|'|`)?\]$/g, "")
           : rawPiece;
 
       current[piece] = isLast ? object[key] : current[piece] || {};
 
-      if (arrayTransform) {
+      if (arrays) {
         isArrayIndex(rawPiece) && arrayLikeParents.set(memoPath, memoParent);
         memoParent = current;
       }
 
       current = current[piece];
 
-      if (arrayTransform) {
+      if (arrays) {
         memoPath = dot(memoPath, piece, { separator });
       }
     }
   }
 
-  if (arrayTransform) {
+  if (arrays) {
     // Merge the array values:
     const toTransform = Array.from(arrayLikeParents.entries()).reverse(); // Reverse so we process nested objects first
 
@@ -138,17 +138,19 @@ export function transform(
   return transformed.$;
 }
 
-export function createDotter(config?: {
-  split: SplitOpts;
-  dot: DotOpts;
-  merge: TransformOpts;
-}) {
+type CreateDotterOptions = {
+  separator?: TransformOpts["separator"];
+  brackets?: TransformOpts["brackets"];
+  arrays?: TransformOpts["arrays"];
+};
+
+export function createDotter(config?: CreateDotterOptions) {
   return {
     dot: (a: string | number, b: string | number, opts: DotOpts = {}) =>
-      dot(a, b, { ...config?.dot, ...opts }),
+      dot(a, b, { ...config, ...opts }),
     transform: (data: Record<string, any>, opts: TransformOpts = {}) =>
-      transform(data, { ...config?.merge, ...opts }),
+      transform(data, { ...config, ...opts }),
     split: (key: string, opts: SplitOpts = {}) =>
-      split(key, { ...config?.split, ...opts }),
+      split(key, { ...config, ...opts }),
   };
 }

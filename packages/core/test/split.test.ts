@@ -17,7 +17,7 @@ test("correctly dots with right empty", () => {
 });
 
 test("splits with number", () => {
-  expect(split("person[0]", { boxSplit: true })).toEqual(["person", "[0]"]);
+  expect(split("person[0]", { brackets: true })).toEqual(["person", "[0]"]);
 });
 
 test("splits with empty left and number", () => {

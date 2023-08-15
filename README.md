@@ -5,7 +5,10 @@ Utility functions for converting flattened dot notation objects to nested object
 # Example
 
 ```ts
-const d = dotter(".");
+const d = createDotter({
+  arrays: true,
+  brackets: true,
+});
 
 /* Creating keys */
 d.dot("a", "b"); // "a.b"
@@ -24,30 +27,30 @@ d.split("[0]."); // [0, "."]
 d.split(".[0]"); // [".", 0]
 
 /* Merging objects */
-d.merge({
+d.transform({
   "a.b.c": 0,
-}); // { a: { b: { c: 1 }}}
-d.merge({
+}); // { a: { b: { c: 0 }}}
+d.transform({
   "a[0]": 0,
   "a[1]": 1,
   "a[2]": 2,
 }); // {a: [0, 1, 2] }
-d.merge({
+d.transform({
   "[0]": 0,
   "[1]": 1,
   "[2]": 2,
 }); // [0, 1, 2]
-d.merge({
+d.transform({
   "[0]": 0,
   "[2]": 1,
   "[4]": 2,
 }); // [0, undefined, 1, undefined, 2]
-d.merge({
+d.transform({
   "[0][0]": 0,
   "[1][0]": 1,
   "[2][0]": 2,
 }); // [[0], [1], [2]]
-d.merge({
+d.transform({
   "[0][0]": 0,
   "[1][1]": 1,
   "[2][2]": 2,

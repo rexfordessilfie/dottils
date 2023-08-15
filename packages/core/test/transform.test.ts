@@ -42,7 +42,7 @@ const sample6 = {
 };
 
 test("transforms an object with array index and flattens it", () => {
-  expect(transform(sample1, { arrayTransform: true, boxSplit: true })).toEqual({
+  expect(transform(sample1, { arrays: true, brackets: true })).toEqual({
     workspace: {
       apple: {
         teams: [
@@ -61,7 +61,7 @@ test("transforms an object with array index and flattens it", () => {
 });
 
 test("transforms an object with boxes", () => {
-  expect(transform(sample6, { boxSplit: true })).toEqual({
+  expect(transform(sample6, { brackets: true })).toEqual({
     workspace: {
       apple: {
         teams: {
@@ -81,48 +81,29 @@ test("transforms an object with boxes", () => {
 });
 
 test("transforms an object without flattening arrays", () => {
-  expect(transform(sample1, { arrayTransform: false, boxSplit: true })).toEqual(
-    {
-      workspace: {
-        apple: {
-          teams: {
-            0: {
-              0: { name: "Rex" },
-              1: { name: "Dan" },
-              2: { name: "Bella" },
-              4: { name: "Harvey" },
-            },
-            1: {
-              3: { name: "Jane" },
-            },
+  expect(transform(sample1, { arrays: false, brackets: true })).toEqual({
+    workspace: {
+      apple: {
+        teams: {
+          0: {
+            0: { name: "Rex" },
+            1: { name: "Dan" },
+            2: { name: "Bella" },
+            4: { name: "Harvey" },
+          },
+          1: {
+            3: { name: "Jane" },
           },
         },
       },
-    }
-  );
+    },
+  });
 });
 
 test("transforms an object with preceding separator", () => {
-  expect(transform(sample2, { arrayTransform: false, boxSplit: true })).toEqual(
-    {
-      "": {
-        workspace: {
-          0: {
-            name: "apple",
-          },
-          1: {
-            name: "google",
-          },
-        },
-      },
-    }
-  );
-});
-
-test("transforms an object with preceding separator then array", () => {
-  expect(transform(sample3, { arrayTransform: false, boxSplit: true })).toEqual(
-    {
-      "": {
+  expect(transform(sample2, { arrays: false, brackets: true })).toEqual({
+    "": {
+      workspace: {
         0: {
           name: "apple",
         },
@@ -130,10 +111,23 @@ test("transforms an object with preceding separator then array", () => {
           name: "google",
         },
       },
-    }
-  );
+    },
+  });
+});
 
-  expect(transform(sample3, { arrayTransform: true, boxSplit: true })).toEqual({
+test("transforms an object with preceding separator then array", () => {
+  expect(transform(sample3, { arrays: false, brackets: true })).toEqual({
+    "": {
+      0: {
+        name: "apple",
+      },
+      1: {
+        name: "google",
+      },
+    },
+  });
+
+  expect(transform(sample3, { arrays: true, brackets: true })).toEqual({
     "": [
       {
         name: "apple",
@@ -146,20 +140,18 @@ test("transforms an object with preceding separator then array", () => {
 });
 
 test("transforms array only object", () => {
-  expect(transform(sample4, { arrayTransform: false, boxSplit: true })).toEqual(
-    {
-      0: {
-        name: "apple",
-      },
-      1: {
-        name: "google",
-      },
-    }
-  );
+  expect(transform(sample4, { arrays: false, brackets: true })).toEqual({
+    0: {
+      name: "apple",
+    },
+    1: {
+      name: "google",
+    },
+  });
 });
 
 test("transforms and flattens array only object", () => {
-  expect(transform(sample4, { boxSplit: true, arrayTransform: true })).toEqual([
+  expect(transform(sample4, { brackets: true, arrays: true })).toEqual([
     {
       name: "apple",
     },
@@ -170,7 +162,7 @@ test("transforms and flattens array only object", () => {
 });
 
 test("transforms nested array only objects", () => {
-  expect(transform(sample5, { boxSplit: true, arrayTransform: true })).toEqual([
+  expect(transform(sample5, { brackets: true, arrays: true })).toEqual([
     [0],
     [undefined, 1],
     [undefined, undefined, 2],
