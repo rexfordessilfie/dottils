@@ -2,6 +2,18 @@
   "name": "core",
   "version": "0.0.1",
   "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./flat-keys": {
+      "import": "./dist/flat-keys.js",
+      "require": "./dist/flat-keys.js",
+      "types": "./dist/flat-keys.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsc -p tsconfig-build.json",
     "test": "vitest run",
@@ -14,5 +26,8 @@
     "typescript": "^5.1.6",
     "vitest": "^0.34.1",
     "zod": "^3.22.2"
+  },
+  "dependencies": {
+    "utility-types": "^3.10.0"
   }
 }

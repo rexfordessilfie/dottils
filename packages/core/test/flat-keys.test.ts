@@ -70,10 +70,6 @@ test("flattens keys with transform (zod)", () => {
     "things[0].person.emoji",
   );
 
-  // TODO: explore using union to intersection so we don't have to narrow types
-  let fItem = f.items.$index(0);
-  expect("a" in fItem && fItem.a.$key).toBe("items[0].a");
-
-  fItem = f.items.$index(0);
-  expect("b" in fItem && fItem.b.$key).toBe("items[0].b");
+  expect(f.items.$index(0).a.$key).toBe("items[0].a");
+  expect(f.items.$index(1).b.$key).toBe("items[1].b");
 });

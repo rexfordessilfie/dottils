@@ -1,19 +1,20 @@
 import { dot, DotOpts } from "./dotter";
+import { UnionToIntersection } from "utility-types";
 
 type Key = {
   $key: string;
 };
 
-type KeyAndIndex<ElementType = unknown> = Key & {
-  $index: (idx: number) => inferFormNames<ElementType>;
+type IndexableKey<ElementType = unknown> = Key & {
+  $index: (idx: number) => inferFormNames<UnionToIntersection<ElementType>>;
 };
 
 type inferFormNames<T> = T extends (infer ElementType)[]
-  ? KeyAndIndex<ElementType>
+  ? IndexableKey<ElementType>
   : T extends object
   ? {
       [K in keyof T]: T[K] extends (infer ElementType)[]
-        ? KeyAndIndex<ElementType>
+        ? IndexableKey<ElementType>
         : Key & inferFormNames<T[K]>;
     }
   : unknown;
@@ -66,7 +67,7 @@ export function createFlatKeys<S>(root: S, opts?: CreateFlattenedKeysOpts) {
 
       // Check if we are dealing with a key that has an array value
       if (Array.isArray(val)) {
-        const formName: KeyAndIndex<ArrayElement<typeof val>> = {
+        const formName: IndexableKey<ArrayElement<typeof val>> = {
           ...base,
           $index(idx: number, opts?: DotOpts) {
             // Dynamically build the rest of the key after index provided
@@ -89,7 +90,7 @@ export function createFlatKeys<S>(root: S, opts?: CreateFlattenedKeysOpts) {
     }
   }
 
-  let final = {} as Record<string, any>; // TODO: custom derived type
+  const final = {};
   _createFlatKeys(root, final);
 
   return final as inferFormNames<S>;
