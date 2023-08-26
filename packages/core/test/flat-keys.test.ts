@@ -71,6 +71,9 @@ test("flattens keys with transform (zod)", () => {
   );
 
   // TODO: explore using union to intersection so we don't have to narrow types
-  const key = f.items.$index(0);
-  expect("a" in key && key.a.$key).toBe("items[0].a");
+  let fItem = f.items.$index(0);
+  expect("a" in fItem && fItem.a.$key).toBe("items[0].a");
+
+  fItem = f.items.$index(0);
+  expect("b" in fItem && fItem.b.$key).toBe("items[0].b");
 });
