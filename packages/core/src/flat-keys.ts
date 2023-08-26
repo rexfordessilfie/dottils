@@ -1,31 +1,11 @@
 import { dot, DotOpts } from "./dotter";
-import { UnionToIntersection } from "utility-types";
-
-type Key = {
-  $key: string;
-};
-
-type IndexableKey<ElementType = unknown> = Key & {
-  $index: (idx: number) => inferFormNames<UnionToIntersection<ElementType>>;
-};
-
-type inferFormNames<T> = T extends (infer ElementType)[]
-  ? IndexableKey<ElementType>
-  : T extends object
-  ? {
-      [K in keyof T]: T[K] extends (infer ElementType)[]
-        ? IndexableKey<ElementType>
-        : Key & inferFormNames<T[K]>;
-    }
-  : unknown;
+import { ArrayElement, IndexableKey, inferFormNames, Key } from "./types";
 
 type CreateFlattenedKeysOpts = {
   dotFn?: typeof dot;
   dotOpts?: DotOpts;
   transform?: <TIn, TOut>(obj: TIn) => TOut;
 };
-
-type ArrayElement<T extends any[]> = T extends (infer E)[] ? E : unknown;
 
 /**
  * Generate flattened keys from an object
