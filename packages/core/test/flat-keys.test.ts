@@ -9,19 +9,17 @@ test("flattens keys from an object", () => {
     nested: {
       car: "Chevy",
     },
-    things: [{ person: { emoji: "🤩" } }],
+    items: [{ person: { emoji: "🤩" } }, { person: { emoji: "🤪" } }],
   });
 
   expect(f.name.$key).toEqual("name");
   expect(f.age.$key).toEqual("age");
   expect(f.nested.$key).toEqual("nested");
   expect(f.nested.car.$key).toEqual("nested.car");
-  expect(f.things.$key).toEqual("things");
-  expect(f.things.$index(0).person.$key).toEqual("things[0].person");
-  expect(f.things.$index(2).person.$key).toEqual("things[2].person");
-  expect(f.things.$index(0).person.emoji.$key).toEqual(
-    "things[0].person.emoji",
-  );
+  expect(f.items.$key).toEqual("items");
+  expect(f.items.$index(0).person.$key).toEqual("items[0].person");
+  expect(f.items.$index(2).person.$key).toEqual("items[2].person");
+  expect(f.items.$index(0).person.emoji.$key).toEqual("items[0].person.emoji");
 });
 
 test("flattens keys with transform (zod)", () => {
@@ -31,8 +29,8 @@ test("flattens keys with transform (zod)", () => {
     nested: z.object({
       car: z.string(),
     }),
-    items: z.tuple([z.object({ a: z.string() }), z.object({ b: z.string() })]),
-    things: z.array(
+    tuple: z.tuple([z.object({ a: z.string() }), z.object({ b: z.string() })]),
+    items: z.array(
       z.object({
         person: z.object({
           emoji: z.string().emoji(),
@@ -63,13 +61,11 @@ test("flattens keys with transform (zod)", () => {
   expect(f.age.$key).toEqual("age");
   expect(f.nested.$key).toEqual("nested");
   expect(f.nested.car.$key).toEqual("nested.car");
-  expect(f.things.$key).toEqual("things");
-  expect(f.things.$index(0).person.$key).toEqual("things[0].person");
-  expect(f.things.$index(2).person.$key).toEqual("things[2].person");
-  expect(f.things.$index(0).person.emoji.$key).toEqual(
-    "things[0].person.emoji",
-  );
+  expect(f.items.$key).toEqual("items");
+  expect(f.items.$index(0).person.$key).toEqual("items[0].person");
+  expect(f.items.$index(2).person.$key).toEqual("items[2].person");
+  expect(f.items.$index(0).person.emoji.$key).toEqual("items[0].person.emoji");
 
-  expect(f.items.$index(0).a.$key).toBe("items[0].a");
-  expect(f.items.$index(1).b.$key).toBe("items[1].b");
+  expect(f.tuple.$index(0).a.$key).toBe("tuple[0].a");
+  expect(f.tuple.$index(1).b.$key).toBe("tuple[1].b");
 });

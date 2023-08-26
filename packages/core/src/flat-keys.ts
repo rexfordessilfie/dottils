@@ -72,8 +72,9 @@ export function createFlatKeys<S>(root: S, opts?: CreateFlattenedKeysOpts) {
           $index(idx: number, opts?: DotOpts) {
             // Dynamically build the rest of the key after index provided
             const next = {};
+            const nextKey = dotFn(dotKey, idx, opts);
             val.forEach((v) => {
-              _createFlatKeys(v, next, dotFn(dotKey, idx, opts));
+              _createFlatKeys(v, next, nextKey);
             });
             return next;
           },
