@@ -151,6 +151,30 @@ f.items.$index(0).person.emoji.$key; // "items[0].person.emoji"
 f.items.$index(1).person.emoji.$key; // "items[1].person.emoji"
 ```
 
+## `createDynamicFlatKeys(opts)`
+
+Like `createFlatKeys` but only requires a type annotation. Keys are created as you go via a proxy.
+
+```ts
+type Person = {
+  name: string;
+  age: number;
+  nested: {
+    car: string;
+  };
+  list: { person: { emoji: string } }[];
+};
+
+const f = createDynamicFlatKeys<Person>();
+
+// Access keys
+f.name.$key; // "name"
+f.age.$key; // "age"
+f.nested.car.$key; // "nested.car"
+f.items.$index(0).person.emoji.$key; // "items[0].person.emoji"
+f.items.$index(1).person.emoji.$key; // "items[1].person.emoji"
+```
+
 # Acknowledgements
 
 This repository is inspired by work over on [mickhansen/dottie.js](https://github.com/mickhansen/dottie.js). If you do not need the extra bracket and arrays support, or the flat keys, I recommend using that library instead!
