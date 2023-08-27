@@ -1,8 +1,9 @@
-import { createDotter } from "./src";
+import { dotter } from "./src";
 
-const d = createDotter({
+const d = dotter({
   arrays: true,
   brackets: true,
+  separator: ".",
 });
 
 d.transform({

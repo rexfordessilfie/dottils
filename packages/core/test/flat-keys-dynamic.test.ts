@@ -1,4 +1,4 @@
-import { createDynamicFlatKeys } from "../src";
+import { flatKeysDynamic } from "../src";
 
 import { z } from "zod";
 
@@ -12,7 +12,7 @@ type Data = {
   tuple: [{ a: string }, { b: string }];
 };
 test("flattens keys from an object", () => {
-  const f = createDynamicFlatKeys<Data>();
+  const f = flatKeysDynamic<Data>();
 
   expect(f.name.$key).toEqual("name");
   expect(f.age.$key).toEqual("age");

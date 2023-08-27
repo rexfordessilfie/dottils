@@ -1,7 +1,7 @@
-import { dot, DotOpts } from "./dotter";
+import { dot, DotOpts } from "./dot";
 import { ArrayElement, IndexableKey, inferFormNames, Key } from "./types";
 
-type CreateFlattenedKeysOpts = {
+export type FlatKeysOpts = {
   dotFn?: typeof dot;
   dotOpts?: DotOpts;
   transform?: <TIn, TOut>(obj: TIn) => TOut;
@@ -13,7 +13,7 @@ type CreateFlattenedKeysOpts = {
  * @param opts options
  * @returns
  */
-export function createFlatKeys<S>(root: S, opts?: CreateFlattenedKeysOpts) {
+export function flatKeys<S>(root: S, opts?: FlatKeysOpts) {
   const { dotFn = dot, dotOpts, transform } = opts || {};
 
   function _createFlatKeys(

@@ -1,7 +1,7 @@
-import { dot, DotOpts } from "./dotter";
+import { dot, DotOpts } from "./dot";
 import { inferFormNames } from "./types";
 
-type CreateFlattenedKeysOpts = {
+export type FlatKeysDynamicOpts = {
   dotFn?: typeof dot;
   dotOpts?: DotOpts;
 };
@@ -12,7 +12,7 @@ type CreateFlattenedKeysOpts = {
  * @param opts options
  * @returns
  */
-export function createDynamicFlatKeys<S>(opts?: CreateFlattenedKeysOpts) {
+export function flatKeysDynamic<S>(opts?: FlatKeysDynamicOpts) {
   const { dotFn = dot, dotOpts } = opts || {};
 
   function createBuilderProxy<T extends object>(obj: T, prevKey?: string): any {

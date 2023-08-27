@@ -1,9 +1,9 @@
-import { createFlatKeys } from "../src";
+import { flatKeys } from "../src";
 
 import { z } from "zod";
 
 test("flattens keys from an object", () => {
-  const f = createFlatKeys({
+  const f = flatKeys({
     name: "Rex",
     age: 12,
     nested: {
@@ -53,7 +53,7 @@ test("flattens keys with transform (zod)", () => {
     }
   }
 
-  const f = createFlatKeys<z.infer<typeof schema>>(schema as any, {
+  const f = flatKeys<z.infer<typeof schema>>(schema as any, {
     transform: zodTransform,
   });
 
