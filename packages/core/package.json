@@ -1,5 +1,5 @@
 {
-  "name": "core",
+  "name": "dottils",
   "version": "0.0.1",
   "main": "dist/index.js",
   "exports": {
@@ -7,13 +7,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./flat-keys": {
-      "import": "./dist/flat-keys.js",
-      "require": "./dist/flat-keys.js",
-      "types": "./dist/flat-keys.d.ts"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig-build.json",
     "test": "vitest run",
@@ -29,5 +27,14 @@
   },
   "dependencies": {
     "utility-types": "^3.10.0"
+  },
+  "license": "MIT",
+  "author": "Rexford Essilfie <rexfordessilfie09@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rexfordessilfie/dottils"
+  },
+  "bugs": {
+    "url": "https://github.com/rexfordessilfie/dottils/issues"
   }
 }

@@ -1,6 +1,6 @@
 # dottils
 
-Collection of useful utility functions that work with dot notation objects.
+Utility functions for working with dot notation objects in Typescript with support for arrays and brackets.
 
 # Usage
 
