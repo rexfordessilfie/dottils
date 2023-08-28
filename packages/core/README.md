@@ -27,7 +27,7 @@ Splits a dot-notation key into an array of keys.
 split("a.b"); // ["a", "b"]
 split("a."); // ["a", ""]
 split(".b"); // "b"
-split("a", 0); // "a[0]"
+split("a[0]"); // ["a", "[0]"]
 split("[0]."); // [0, ""]
 split(".[0]"); // ["", 0]
 ```
